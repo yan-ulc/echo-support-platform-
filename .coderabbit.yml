@@ -1,0 +1,16 @@
+language: typescript
+
+review:
+  enable: true
+  auto_review: true
+  review_on_push: true
+  severity: medium
+  comment_as_summary: true
+  request_changes_on_critical: true
+  max_comments: 15
+
+ignore:
+  - dist/**
+  - .next/**
+  - build/**
+  - node_modules/**
