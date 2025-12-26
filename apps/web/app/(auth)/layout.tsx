@@ -1,8 +1,13 @@
+import { AuthLayout } from "@/modules/auth/ui/layout/auth-layout";
+import { UserButton } from "@clerk/nextjs";
+
+
 const Layout = ({children}: {children: React.ReactNode}) => {
     return ( 
-         <div className="flex flex-col items-center justify-center min-h-screen min-w-screen">
+         <AuthLayout>
             {children}
-        </div>  
+        </AuthLayout>  
+            
         
         
  );
