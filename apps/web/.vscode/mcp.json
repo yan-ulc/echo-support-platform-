@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/syiah-kuala-university-i7/echo-guwa",
+      "type": "http"
+    }
+  }
+}
