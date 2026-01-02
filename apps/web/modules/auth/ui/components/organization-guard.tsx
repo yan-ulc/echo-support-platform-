@@ -1,5 +1,4 @@
-"use client "
-
+"use client"
 import { useOrganization } from "@clerk/nextjs"
 import { AuthLayout } from "@/modules/auth/ui/layout/auth-layout"
 import { OrgSelectionView } from "../views/org-select-view";

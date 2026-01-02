@@ -73,8 +73,8 @@ export const useVapi = () => {
     }
   return {
     isConnected,
-    isConnecting,
-    isSpeaking,
+    isConnecting, 
+    isSpeaking, 
     transcript,
     starCall,
     endCall,
