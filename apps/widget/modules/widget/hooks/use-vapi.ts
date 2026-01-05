@@ -14,7 +14,12 @@ export const useVapi = () => {
   const [transcript, setTranscript] = useState<TansriptMessage[]>([]);
 
   useEffect(() => {
-    const vapiInstance = new Vapi("d5709f96-af32-4587-8b7c-d7d44f043622");
+    const apiKey = process.env.NEXT_PUBLIC_VAPI_API_KEY;
+    if (!apiKey) {
+      console.error("Missing NEXT_PUBLIC_VAPI_API_KEY in environment.");
+      return;
+    }
+    const vapiInstance = new Vapi(apiKey);
     setVapi(vapiInstance);
 
     vapiInstance.on("call-start", () => {
@@ -62,19 +67,25 @@ export const useVapi = () => {
     setIsConnecting(true);
 
     if (vapi) {
-      vapi.start("5310c159-19cb-419f-9a99-ed82fa79b861");
+      const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
+      if (!assistantId) {
+        console.error("Missing NEXT_PUBLIC_VAPI_ASSISTANT_ID in environment.");
+        setIsConnecting(false);
+        return;
+      }
+      vapi.start(assistantId);
     }
   };
 
-    const endCall = () => {
-        if (vapi) {
-            vapi.stop();
-        }
+  const endCall = () => {
+    if (vapi) {
+      vapi.stop();
     }
+  };
   return {
     isConnected,
-    isConnecting, 
-    isSpeaking, 
+    isConnecting,
+    isSpeaking,
     transcript,
     starCall,
     endCall,
