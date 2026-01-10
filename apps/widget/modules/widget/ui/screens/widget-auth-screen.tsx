@@ -1,7 +1,13 @@
 "use client";
 
+import {
+  contactSessionIdAtomFamily,
+  organizationIdAtom,
+} from "@/modules/widget/atoms/widget-atoms";
 import { WidgetHeader } from "@/modules/widget/ui/components/widget-header";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "@workspace/backend/_generated/api";
+import { Doc } from "@workspace/backend/_generated/dataModel";
 import { Button } from "@workspace/ui/components/button";
 import {
   Form,
@@ -12,25 +18,20 @@ import {
 } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
 import { useMutation } from "convex/react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { api } from "@workspace/backend/_generated/api";
-import { userAgent } from "next/server";
-import { Languages } from "lucide-react";
-import { platform } from "os";
-import { ViewportBoundary } from "next/dist/server/app-render/entry-base";
-import { time } from "console";
-import { Doc } from "@workspace/backend/_generated/dataModel";
-import { Metadata } from "next";
 
 const formsSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
 });
 
-const organizationId = "123"; // Replace with actual organization ID
-
 export const WidgetAuthScreen = () => {
+  const organizationId = useAtomValue(organizationIdAtom);
+  const setContactSessionId = useSetAtom(
+    contactSessionIdAtomFamily(organizationId || "")
+  );
   const form = useForm<z.infer<typeof formsSchema>>({
     resolver: zodResolver(formsSchema),
     defaultValues: {
@@ -39,32 +40,32 @@ export const WidgetAuthScreen = () => {
     },
   });
 
-  const createContactSession = useMutation(api.public.contactSessions.create)
+  const createContactSession = useMutation(api.public.contactSessions.create);
 
   const onSubmit = async (values: z.infer<typeof formsSchema>) => {
     if (!organizationId) {
       return;
     }
     const metadata: Doc<"contactSessions">["metadata"] = {
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        languages: navigator.languages.join(", "),
-        platform: navigator.platform,
-        vendor: navigator.vendor,
-        screenResolution: `${screen.width}x${screen.height}`,
-        viewPortSize: `${window.innerWidth}x${window.innerHeight}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timezoneOffset: new Date().getTimezoneOffset(),
-        referrer: document.referrer || "direct",
-        currentUrl: window.location.href,
-    }
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      languages: navigator.languages.join(", "),
+      platform: navigator.platform,
+      vendor: navigator.vendor,
+      screenResolution: `${screen.width}x${screen.height}`,
+      viewPortSize: `${window.innerWidth}x${window.innerHeight}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezoneOffset: new Date().getTimezoneOffset(),
+      referrer: document.referrer || "direct",
+      currentUrl: window.location.href,
+    };
     const contactSessionId = await createContactSession({
-       ...values,
-       metadata,
-       organizationId,
+      ...values,
+      metadata,
+      organizationId,
     });
 
-    console.log("Contact Session ID:", contactSessionId);
+    setContactSessionId(contactSessionId);
   };
 
   return (
