@@ -1,4 +1,3 @@
-import { threadId } from "worker_threads";
 import {mutation, query} from "../_generated/server";
 import {ConvexError, v} from "convex/values";
 import { supportAgent } from "../system/ai/agents/supportAgent";
