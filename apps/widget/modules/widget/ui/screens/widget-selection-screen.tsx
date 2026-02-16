@@ -8,6 +8,7 @@ import { contactSessionIdAtomFamily, errorMessageAtom, organizationIdAtom, scree
 import { api } from "@workspace/backend/_generated/api";
 import { useMutation } from "convex/react";
 import { conversationIdAtom } from "@/modules/widget/atoms/widget-atoms";
+import { WidgetFooter } from "../components/widget-footer";
 
 export const WidgetSelectionScreen = () => {
 
@@ -74,6 +75,7 @@ export const WidgetSelectionScreen = () => {
           <ChevronRightIcon />
         </Button>
       </div>
+      <WidgetFooter />
     </>
   );
 };

@@ -12,13 +12,20 @@ import {
   AIConversation,
   AIConversationContent,
 } from "@workspace/ui/components/ai/conversation";
-import { AIInput, AIInputSubmit, AIInputTextarea, AIInputToolbar, AIInputTools } from "@workspace/ui/components/ai/input";
+import {
+  AIInput,
+  AIInputSubmit,
+  AIInputTextarea,
+  AIInputToolbar,
+  AIInputTools,
+} from "@workspace/ui/components/ai/input";
 import {
   AIMessage,
   AIMessageContent,
 } from "@workspace/ui/components/ai/message";
 import { AIResponse } from "@workspace/ui/components/ai/response";
 import { Button } from "@workspace/ui/components/button";
+import { DicebearAvatar } from "@workspace/ui/components/dicebear-avatar";
 import { Form, FormField } from "@workspace/ui/components/form";
 import { InfiniteScrollTrigger } from "@workspace/ui/components/infinite-scroll-trigger";
 import { useInfiniteScroll } from "@workspace/ui/hooks/use-infinite-scroll";
@@ -29,8 +36,6 @@ import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { WidgetHeader } from "../components/widget-header";
-import { DicebearAvatar } from "@workspace/ui/components/dicebear-avatar";
-
 
 const formSchema = z.object({
   message: z.string().min(1, "Message is required"),
@@ -46,6 +51,7 @@ export const WidgetChatScreen = () => {
   );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const previousLastMessageIdRef = useRef<string | undefined>(undefined);
 
   const onBack = () => {
     setScreen("selection");
@@ -73,12 +79,12 @@ export const WidgetChatScreen = () => {
     { initialNumItems: 10 },
   );
 
-  const {topElementRef, canLoadMore, isLoadingMore, handleLoadMore} = useInfiniteScroll({
-    status: messages.status,
-    loadMore: messages.loadMore,
-    loadsize: 10,
-
-  });
+  const { topElementRef, canLoadMore, isLoadingMore, handleLoadMore } =
+    useInfiniteScroll({
+      status: messages.status,
+      loadMore: messages.loadMore,
+      loadsize: 10,
+    });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -94,8 +100,24 @@ export const WidgetChatScreen = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages.results]);
+    if (!messages.results || messages.results.length === 0) {
+      return;
+    }
+
+    const currentLastMessageId =
+      messages.results[messages.results.length - 1]?.id;
+
+    // Only scroll if the last message ID changed (new message appended)
+    // and we're not loading more old messages
+    if (
+      currentLastMessageId !== previousLastMessageIdRef.current &&
+      !isLoadingMore
+    ) {
+      scrollToBottom();
+    }
+
+    previousLastMessageIdRef.current = currentLastMessageId;
+  }, [messages.results, isLoadingMore]);
 
   if (conversation === undefined) {
     return <div>Loading conversation...</div>;
@@ -149,11 +171,10 @@ export const WidgetChatScreen = () => {
                 </AIMessageContent>
                 {message.role === "assistant" && (
                   <DicebearAvatar
-                  imageUrl="/logo.svg"
-                  seed = "assistant"
-                  size={32}   
-                 />
-
+                    imageUrl="/logo.svg"
+                    seed="assistant"
+                    size={32}
+                  />
                 )}
               </AIMessage>
             );
@@ -185,14 +206,14 @@ export const WidgetChatScreen = () => {
                   conversation?.status === "resolved"
                     ? "Conversation resolved"
                     : "Type your message..."
-                } 
-                value  = {field.value}
+                }
+                value={field.value}
               />
             )}
           />
           <AIInputToolbar>
             <AIInputTools />
-            <AIInputSubmit 
+            <AIInputSubmit
               disabled={conversation?.status === "resolved"}
               status="ready"
               type="submit"
