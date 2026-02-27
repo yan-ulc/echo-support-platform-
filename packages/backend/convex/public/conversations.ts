@@ -20,21 +20,21 @@ export const getMany = query({
       });
     }
     const conversations = await ctx.db
-        .query("conversations")
-        .withIndex("by_contact_session_id", (q)=>
+      .query("conversations")
+      .withIndex("by_contact_session_id", (q) =>
         q.eq("contactSessionId", args.contactSessionId),
       )
       .order("desc")
-      .paginate(args.paginationOpts)
+      .paginate(args.paginationOpts);
 
     const conversationWithLastMessage = await Promise.all(
-      conversations.page.map(async(conversations) => {
+      conversations.page.map(async (conversations) => {
         let lastMessage: MessageDoc | null = null;
 
-        const message = await supportAgent.listMessages(ctx, { 
+        const message = await supportAgent.listMessages(ctx, {
           threadId: conversations.threadId,
-          paginationOpts: {numItems: 1, cursor:null}
-        })
+          paginationOpts: { numItems: 1, cursor: null },
+        });
 
         if (message.page.length > 0) {
           lastMessage = message.page[0] ?? null;
@@ -47,8 +47,8 @@ export const getMany = query({
           threadId: conversations.threadId,
           lastMessage,
         };
-      })
-    )
+      }),
+    );
     return {
       ...conversations,
       page: conversationWithLastMessage,

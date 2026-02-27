@@ -94,3 +94,59 @@ export const getMany = query({
     };
   },
 });
+
+export const getOne = query({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (identity === null) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Identity not found",
+      });
+    }
+
+    console.log("Identity keys:", Object.keys(identity));
+
+    const orgId = identity.org_id as string;
+
+    if (!orgId) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Organization ID not found",
+      });
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+
+    if (!conversation) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Conversation not found",
+      });
+    }
+
+    if (conversation.organizationId !== orgId) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Not authorized to access this conversation",
+      });
+    }
+
+    const contactSession = await ctx.db.get(conversation.contactSessionId);
+
+    if (!contactSession) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Contact session not found",
+      });
+    }
+    return {
+      ...conversation,
+      contactSession,
+    };
+  },
+});

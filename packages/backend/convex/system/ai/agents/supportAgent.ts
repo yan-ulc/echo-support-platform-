@@ -6,4 +6,6 @@ export const supportAgent = new Agent(components.agent, {
   name: "Support Agent",
   chat: groq.languageModel("llama-3.3-70b-versatile"),
   instructions: "You are a helpful assistant.",
+
+
 });

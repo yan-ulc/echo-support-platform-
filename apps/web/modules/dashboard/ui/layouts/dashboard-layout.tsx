@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { AuthGuard } from "../../../auth/ui/components/auth-guard";
 import { OrganizationGuard } from "../../../auth/ui/components/organization-guard";
 import { DashboardSidebar } from "@/modules/dashboard/ui/components/dashboard-sidebar"; 
+import { Provider } from "jotai";
 export const DashboardLayout = async ({
   children,
 }: {
@@ -14,12 +15,14 @@ export const DashboardLayout = async ({
   return (
     <AuthGuard>
       <OrganizationGuard>
+        <Provider>
         <SidebarProvider defaultOpen={defaultOpen}>
           <DashboardSidebar />
           <main className="flex flex-1 flex-col">
             {children}
           </main>
         </SidebarProvider>
+        </Provider>
       </OrganizationGuard>
     </AuthGuard>
   );
