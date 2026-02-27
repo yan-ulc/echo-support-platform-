@@ -1,10 +1,8 @@
-import { action, query } from "../_generated/server";
-import { internal } from "../_generated/api";
-import { ConvexError, v } from "convex/values";
-import { supportAgent } from "../system/ai/agents/supportAgent";
-import { threadId } from "worker_threads";
 import { paginationOptsValidator } from "convex/server";
-import { constants } from "buffer";
+import { ConvexError, v } from "convex/values";
+import { internal } from "../_generated/api";
+import { action, query } from "../_generated/server";
+import { supportAgent } from "../system/ai/agents/supportAgent";
 
 export const create = action({
   args: {
@@ -16,7 +14,7 @@ export const create = action({
   handler: async (ctx, args) => {
     const contactSession = await ctx.runQuery(
       internal.system.contactSessions.getOne,
-      { contactSessionId: args.contactSessionId }
+      { contactSessionId: args.contactSessionId },
     );
 
     if (!contactSession || contactSession.expiresAt < Date.now()) {
@@ -28,7 +26,7 @@ export const create = action({
 
     const conversation = await ctx.runQuery(
       internal.system.conversations.getByThreadId,
-      { threadId: args.threadId }
+      { threadId: args.threadId },
     );
 
     if (!conversation) {
@@ -45,7 +43,7 @@ export const create = action({
       });
     }
 
-if (conversation.status === "resolved") {
+    if (conversation.status === "resolved") {
       throw new ConvexError({
         code: "BAD_REQUEST",
         message: "Conversation Resolved",
@@ -54,36 +52,33 @@ if (conversation.status === "resolved") {
 
     // TODO: implement subscription check
     await supportAgent.generateText(
-        ctx, 
-        {threadId: args.threadId},
-        {prompt: args.prompt}
-         
-    )
-},
+      ctx,
+      { threadId: args.threadId },
+      { prompt: args.prompt },
+    );
+  },
 });
 
-export const getMany = query({ 
-    args: {
-        threadId: v.string(),
-        paginationOpts: paginationOptsValidator,
-        contactSessionId: v.id("contactSessions"),
-    },
-    handler : async (ctx, args) => {
-        const contactSession = await ctx.db.get(args.contactSessionId);
-    
-        if (!contactSession || contactSession.expiresAt < Date.now()) {
-          throw new ConvexError({
-            code: "UNAUTHORIZED",
-            message: "Contact session is invalid or expired",
-          });
-        }
+export const getMany = query({
+  args: {
+    threadId: v.string(),
+    paginationOpts: paginationOptsValidator,
+    contactSessionId: v.id("contactSessions"),
+  },
+  handler: async (ctx, args) => {
+    const contactSession = await ctx.db.get(args.contactSessionId);
 
-        const paginated = await supportAgent.listMessages(
-            ctx,
-            {threadId: args.threadId,
-            paginationOpts: args.paginationOpts
-            },
-        );
-        return paginated;
+    if (!contactSession || contactSession.expiresAt < Date.now()) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Contact session is invalid or expired",
+      });
     }
+
+    const paginated = await supportAgent.listMessages(ctx, {
+      threadId: args.threadId,
+      paginationOpts: args.paginationOpts,
+    });
+    return paginated;
+  },
 });

@@ -1,8 +1,8 @@
+import { ConversationsView } from "@/modules/dashboard/ui/views/conversations-view";
+
 const Page = () => {
     return (
-        <div>  
-            peler
-        </div>
+       <ConversationsView />
 
      );
 }

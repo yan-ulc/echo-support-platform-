@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const getMany = query({
   args: {},
@@ -18,13 +18,11 @@ export const add = mutation({
       throw new Error("Not authenticated");
     }
 
-    const orgId = identity.org_Id as string;
+    const orgId = identity.org_id as string;
 
     if (!orgId) {
       throw new Error("Missing organization");
     }
-
-    throw new Error("Tracking test");
 
     const userId = await ctx.db.insert("users", {
       name: "yannn",

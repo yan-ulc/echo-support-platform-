@@ -1,5 +1,5 @@
 "use client";
-import { getConuntryFromTimezone, getFlagUrl } from "@/lib/country-utils";
+import { getCountryFromTimezone, getFlagUrl } from "@/lib/country-utils";
 import { api } from "@workspace/backend/_generated/api";
 import { ConversationStatusIcon } from "@workspace/ui/components/conversation-status-icon";
 import { DicebearAvatar } from "@workspace/ui/components/dicebear-avatar";
@@ -51,11 +51,6 @@ export const ConversationsPanel = () => {
     loadMore: conversations.loadMore,
     loadsize: 10,
   });
-
-  console.log("Conversations object:", conversations);
-  console.log("Conversations results:", conversations?.results);
-  console.log("Conversations results length:", conversations?.results?.length);
-  console.log("Conversations status:", conversations?.status);
 
   return (
     <div className="flex h-full w-full flex-col bg-primary-foreground text-sidebar-foreground">
@@ -112,9 +107,10 @@ export const ConversationsPanel = () => {
             ) : (
               conversations.results.map((conversation) => {
                 const isLastMessageFromOperator =
-                  conversation.lastMessage?.message?.role !== "user";
+                  !!conversation.lastMessage?.message &&
+                  conversation.lastMessage.message.role !== "user";
 
-                const country = getConuntryFromTimezone(
+                const country = getCountryFromTimezone(
                   conversation.contactSession.metadata?.timezone || "UTC",
                 );
 
