@@ -4,6 +4,60 @@ import { ConvexError, v } from "convex/values";
 import { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
 import { supportAgent } from "../system/ai/agents/supportAgent";
+import { mutation } from "../_generated/server";
+
+export const updateStatus = mutation({
+  args : {
+    conversationId: v.id("conversations"),
+    status: v.union(
+      v.literal("unresolved"),
+      v.literal("escalated"), 
+      v.literal("resolved"),
+    ),
+  },
+  handler: async (ctx, args) => {
+     const identity = await ctx.auth.getUserIdentity();
+
+    if (identity === null) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Identity not found",
+      });
+    }
+
+    console.log("Identity keys:", Object.keys(identity));
+
+    const orgId = identity.org_id as string;
+
+    if (!orgId) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Organization ID not found",
+      });
+    }
+    const conversation = await ctx.db.get(args.conversationId);
+
+    if (!conversation) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Conversation not found",
+      });
+    }
+
+    if (conversation.organizationId !== orgId) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Not authorized to access this conversation",
+      });
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      status: args.status,
+    });
+
+    return null;
+  },
+});
 
 export const getMany = query({
   args: {

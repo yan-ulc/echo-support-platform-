@@ -2,6 +2,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
+  devIndicators: false,
+
+
 }
 
 export default withSentryConfig(nextConfig, {
