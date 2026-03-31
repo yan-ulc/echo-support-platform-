@@ -44,6 +44,17 @@ const schema = z.object({
   message: z.string().min(1, "Message is required"),
 });
 
+const getMessageText = (
+  parts: Array<{
+    type: string;
+    text?: string;
+  }>,
+) =>
+  parts
+    .map((part) => (part.type === "text" ? (part.text ?? "") : ""))
+    .filter(Boolean)
+    .join("\n");
+
 export const ConversationIdView = ({
   conversationId,
 }: {
@@ -138,8 +149,8 @@ export const ConversationIdView = ({
     }
   };
 
-  if (conversation === undefined  || messages.status === "LoadingFirstPage") {
-    return < ConversationIdViewLoading/>;
+  if (conversation === undefined || messages.status === "LoadingFirstPage") {
+    return <ConversationIdViewLoading />;
   }
 
   return (
@@ -165,22 +176,26 @@ export const ConversationIdView = ({
 
           {toUIMessages(messages?.results ?? [])
             .reverse()
-            .map((message) => (
-              <AIMessage
-                from={message.role === "user" ? "assistant" : "user"}
-                key={message.id}
-              >
-                <AIMessageContent>
-                  <AIResponse>{message.content}</AIResponse>
-                </AIMessageContent>
-                {message.role === "user" && (
-                  <DicebearAvatar
-                    seed={conversation?.contactSessionId ?? "user"}
-                    size={32}
-                  />
-                )}
-              </AIMessage>
-            ))}
+            .map((message) => {
+              const messageText = getMessageText(message.parts);
+
+              return (
+                <AIMessage
+                  from={message.role === "user" ? "assistant" : "user"}
+                  key={message.id}
+                >
+                  <AIMessageContent>
+                    <AIResponse>{messageText}</AIResponse>
+                  </AIMessageContent>
+                  {message.role === "user" && (
+                    <DicebearAvatar
+                      seed={conversation?.contactSessionId ?? "user"}
+                      size={32}
+                    />
+                  )}
+                </AIMessage>
+              );
+            })}
         </AIConversationContent>
         <AIConversationScrollButton />
       </AIConversation>
@@ -285,18 +300,17 @@ export const ConversationIdViewLoading = () => {
         <div className="p-2">
           <AIInput>
             <AIInputTextarea
-            disabled
-            placeholder="type your response as operator"
+              disabled
+              placeholder="type your response as operator"
             />
             <AIInputToolbar>
               <AIInputTools>
-                <AIInputSubmit disabled status="ready" type="button"/>
+                <AIInputSubmit disabled status="ready" type="button" />
               </AIInputTools>
               <AIInputSubmit disabled status="ready" type="submit" />
             </AIInputToolbar>
           </AIInput>
         </div>
-        
       </div>
     </div>
   );
