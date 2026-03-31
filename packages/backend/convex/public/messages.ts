@@ -7,6 +7,7 @@ import { escalateConversation } from "../system/ai/tools/escalatedConversation";
 import { resolveConversation } from "../system/ai/tools/resolveConversation";
 import { components } from "../_generated/api";
 import { saveMessage } from "@convex-dev/agent";
+
 export const create = action({
   args: {
     prompt: v.string(),
@@ -55,26 +56,51 @@ export const create = action({
 
     // TODO: implement subscription check
 
-    const shouldTriggerAgent = 
-    conversation.status === "unresolved"
-    ;
+    const shouldTriggerAgent = conversation.status === "unresolved";
+    await ctx.runMutation(internal.system.conversations.updateLastMessage, {
+      threadId: args.threadId,
+      text: args.prompt,
+      role: "user",
+    });
 
     if (shouldTriggerAgent) {
-    await supportAgent.generateText(
-      ctx,
-      { threadId: args.threadId },
-      { prompt: args.prompt,
-        tools : {
-          escalateConversation,
-          resolveConversation,
-        }
-       },
-    );
-    } else {
-      await saveMessage(ctx,components.agent, {
+      await supportAgent.generateText(
+        ctx,
+        { threadId: args.threadId },
+        {
+          prompt: args.prompt,
+          tools: {
+            escalateConversation,
+            resolveConversation,
+          },
+        },
+      );
+
+      const latestMessage = await supportAgent.listMessages(ctx, {
         threadId: args.threadId,
-        prompt : args.prompt,
-    }); }
+        paginationOpts: { numItems: 1, cursor: null },
+      });
+
+      const message = latestMessage.page[0];
+      if (message?.text && message.message?.role) {
+        await ctx.runMutation(internal.system.conversations.updateLastMessage, {
+          threadId: args.threadId,
+          text: message.text,
+          role: message.message.role,
+        });
+      }
+    } else {
+      await saveMessage(ctx, components.agent, {
+        threadId: args.threadId,
+        prompt: args.prompt,
+      });
+
+      await ctx.runMutation(internal.system.conversations.updateLastMessage, {
+        threadId: args.threadId,
+        text: args.prompt,
+        role: "user",
+      });
+    }
   },
 });
 

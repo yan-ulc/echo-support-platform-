@@ -1,4 +1,4 @@
-import { MessageDoc, saveMessage } from "@convex-dev/agent";
+import { saveMessage } from "@convex-dev/agent";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { components } from "../_generated/api";
@@ -27,28 +27,14 @@ export const getMany = query({
       .order("desc")
       .paginate(args.paginationOpts);
 
-    const conversationWithLastMessage = await Promise.all(
-      conversations.page.map(async (conversations) => {
-        let lastMessage: MessageDoc | null = null;
-
-        const message = await supportAgent.listMessages(ctx, {
-          threadId: conversations.threadId,
-          paginationOpts: { numItems: 1, cursor: null },
-        });
-
-        if (message.page.length > 0) {
-          lastMessage = message.page[0] ?? null;
-        }
-        return {
-          _id: conversations._id,
-          _creationTime: conversations._creationTime,
-          status: conversations.status,
-          organizationId: conversations.organizationId,
-          threadId: conversations.threadId,
-          lastMessage,
-        };
-      }),
-    );
+    const conversationWithLastMessage = conversations.page.map((conversation) => ({
+      _id: conversation._id,
+      _creationTime: conversation._creationTime,
+      status: conversation.status,
+      organizationId: conversation.organizationId,
+      threadId: conversation.threadId,
+      lastMessage: conversation.lastMessage ?? null,
+    }));
     return {
       ...conversations,
       page: conversationWithLastMessage,
@@ -128,6 +114,12 @@ export const create = mutation({
       status: "unresolved",
       organizationId: args.organizationId,
       threadId,
+      lastMessage: {
+        text: "Hello! How can I assist you today?",
+        message: {
+          role: "assistant",
+        },
+      },
     });
 
     return conversationId;
