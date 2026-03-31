@@ -15,33 +15,66 @@ export const getByThreadId = internalQuery({
   },
 });
 
-
 export const resolve = internalMutation({
   args: {
     threadId: v.string(),
   },
-  handler: async (ctx, args) => { 
-    const covnersation = await ctx.db
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db
       .query("conversations")
       .withIndex("by_thread_id", (q) => q.eq("threadId", args.threadId))
-      .unique(); 
-    if (!covnersation) {
+      .unique();
+    if (!conversation) {
       throw new ConvexError("Conversation not found");
     }
-    await ctx.db.patch(covnersation._id, { status: "resolved" });
-  }})
+    await ctx.db.patch(conversation._id, { status: "resolved" });
+  },
+});
 
-  export const escalate = internalMutation({
+export const escalate = internalMutation({
   args: {
     threadId: v.string(),
   },
-  handler: async (ctx, args) => { 
-    const covnersation = await ctx.db
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db
       .query("conversations")
       .withIndex("by_thread_id", (q) => q.eq("threadId", args.threadId))
-      .unique(); 
-    if (!covnersation) {
+      .unique();
+    if (!conversation) {
       throw new ConvexError("Conversation not found");
     }
-    await ctx.db.patch(covnersation._id, { status: "escalated" });
-  }})
+    await ctx.db.patch(conversation._id, { status: "escalated" });
+  },
+});
+
+export const updateLastMessage = internalMutation({
+  args: {
+    threadId: v.string(),
+    text: v.string(),
+    role: v.union(
+      v.literal("user"),
+      v.literal("assistant"),
+      v.literal("system"),
+      v.literal("tool"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db
+      .query("conversations")
+      .withIndex("by_thread_id", (q) => q.eq("threadId", args.threadId))
+      .unique();
+
+    if (!conversation) {
+      throw new ConvexError("Conversation not found");
+    }
+
+    await ctx.db.patch(conversation._id, {
+      lastMessage: {
+        text: args.text,
+        message: {
+          role: args.role,
+        },
+      },
+    });
+  },
+});

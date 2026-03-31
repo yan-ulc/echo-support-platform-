@@ -1,6 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import { components } from "../_generated/api";
+import { components, internal } from "../_generated/api";
 import { action, mutation, query } from "../_generated/server";
 import { supportAgent } from "../system/ai/agents/supportAgent";
 import { MessageDoc, saveMessage} from "@convex-dev/agent";
@@ -108,6 +108,12 @@ export const create = mutation({
         role: "assistant",
         content: args.prompt,
       },
+    });
+
+    await ctx.runMutation(internal.system.conversations.updateLastMessage, {
+      threadId: conversation.threadId,
+      text: args.prompt,
+      role: "assistant",
     });
   },
 });

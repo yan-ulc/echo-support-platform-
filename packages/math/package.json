@@ -1,10 +1,7 @@
 {
   "name": "@workspace/math",
   "type": "module",
-  "scripts": {
-    "dev": "tsc --watch",
-    "build": "tsc"
-  },
+  "scripts": {},
   "exports": {
     "./add": {
       "types": "./src/add.ts",

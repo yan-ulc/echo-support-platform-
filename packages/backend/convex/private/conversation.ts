@@ -1,9 +1,7 @@
-import { MessageDoc } from "@convex-dev/agent";
 import { paginationOptsValidator, PaginationResult } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
-import { supportAgent } from "../system/ai/agents/supportAgent";
 import { mutation } from "../_generated/server";
 
 export const updateStatus = mutation({
@@ -111,24 +109,14 @@ export const getMany = query({
     }
     const conversationsWithAdditionalData = await Promise.all(
       conversations.page.map(async (conversation) => {
-        let lastMessage: MessageDoc | null = null;
-
         const contactSession = await ctx.db.get(conversation.contactSessionId);
 
         if (!contactSession) {
           return null;
         }
-
-        const message = await supportAgent.listMessages(ctx, {
-          threadId: conversation.threadId,
-          paginationOpts: { numItems: 1, cursor: null },
-        });
-        if (message.page.length > 0) {
-          lastMessage = message.page[0] ?? null;
-        }
         return {
           ...conversation,
-          lastMessage,
+          lastMessage: conversation.lastMessage ?? null,
           contactSession,
         };
       }),
