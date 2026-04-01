@@ -1,20 +1,18 @@
+import { groq } from "@ai-sdk/groq";
+import { saveMessage } from "@convex-dev/agent";
+import { generateText } from "ai";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { components, internal } from "../_generated/api";
 import { action, mutation, query } from "../_generated/server";
 import { supportAgent } from "../system/ai/agents/supportAgent";
-import { MessageDoc, saveMessage} from "@convex-dev/agent";
-import { generateText } from "ai";
-import { groq } from "@ai-sdk/groq";
-
 
 export const enhanceResponse = action({
   args: {
     prompt: v.string(),
-
   },
   handler: async (ctx, args) => {
-const identity = await ctx.auth.getUserIdentity();
+    const identity = await ctx.auth.getUserIdentity();
 
     if (identity === null) {
       throw new ConvexError({
@@ -22,28 +20,28 @@ const identity = await ctx.auth.getUserIdentity();
         message: "Identity not found",
       });
     }
-  const orgId = identity.org_id as string;
+    const orgId = identity.org_id as string;
     if (!orgId) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
         message: "Organization not found",
       });
     }
-    const  response = await generateText( {
-      model: groq.languageModel("llama-3.3-70b-versatile"),
-      messages : [
+    const response = await generateText({
+      model: groq("llama-3.3-70b-versatile") as any,
+      messages: [
         {
-        role : "system",
-        content : "Enhance the operator's response to be more professional, clear and helpful while maintaining their intent and key information.",
-      },
-      {
-      role: "user",
-      content: args.prompt,
-    },
-  ],
-
-     });
-     return response.text;
+          role: "system",
+          content:
+            "Enhance the operator's response to be more professional, clear and helpful while maintaining their intent and key information.",
+        },
+        {
+          role: "user",
+          content: args.prompt,
+        },
+      ],
+    });
+    return response.text;
   },
 });
 

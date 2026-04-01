@@ -1,10 +1,8 @@
 import { createTool, type ToolCtx } from "@convex-dev/agent";
 import type { Tool, ToolExecutionOptions } from "ai";
 import z from "zod";
-import {
-  escalate as escalateConversationMutation,
-  updateLastMessage as updateConversationLastMessageMutation,
-} from "../../conversations";
+import { internal } from "../../../_generated/api";
+import { supportAgent } from "../agents/supportAgent";
 
 const createStringTool = createTool as unknown as (config: {
   description: string;
@@ -17,7 +15,7 @@ const createStringTool = createTool as unknown as (config: {
 }) => Tool<any, string>;
 
 export const escalateConversation = createStringTool({
-  description: "Escalate a conversation.",
+  description: "Escalate a conversation",
   args: z.object({}),
   handler: async (
     ctx: ToolCtx,
@@ -25,19 +23,21 @@ export const escalateConversation = createStringTool({
     _options: ToolExecutionOptions,
   ) => {
     if (!ctx.threadId) {
-      return "missing thread id";
+      return "Missing thread ID";
     }
 
-    await ctx.runMutation(escalateConversationMutation as any, {
+    await ctx.runMutation(internal.system.conversations.escalate, {
       threadId: ctx.threadId,
     });
 
-    await ctx.runMutation(updateConversationLastMessageMutation as any, {
+    await supportAgent.saveMessage(ctx, {
       threadId: ctx.threadId,
-      text: "The conversation has been marked as escalated.",
-      role: "assistant",
+      message: {
+        role: "assistant",
+        content: "Conversation escalated to a human operator.",
+      },
     });
 
-    return "Conversation marked as escalated.";
+    return "Conversation escalated to a human operator";
   },
 });
