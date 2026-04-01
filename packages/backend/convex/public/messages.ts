@@ -55,26 +55,26 @@ export const create = action({
     }
 
     // TODO: implement subscription check
+const shouldTriggerAgent = conversation.status === "unresolved";
 
-    const shouldTriggerAgent = conversation.status === "unresolved";
-    await ctx.runMutation(internal.system.conversations.updateLastMessage, {
-      threadId: args.threadId,
-      text: args.prompt,
-      role: "user",
-    });
+await ctx.runMutation(internal.system.conversations.updateLastMessage, {
+  threadId: args.threadId,
+  text: args.prompt,
+  role: "user",
+});
 
-    if (shouldTriggerAgent) {
-      await supportAgent.generateText(
-        ctx,
-        { threadId: args.threadId },
-        {
-          prompt: args.prompt,
-          tools: {
-            escalateConversation,
-            resolveConversation,
-          },
-        },
-      );
+if (shouldTriggerAgent) {
+  await supportAgent.generateText(
+    ctx,
+    { threadId: args.threadId },
+    {
+      prompt: args.prompt,
+      tools: {
+        escalateConversation,
+        resolveConversation,
+      },
+    }
+  );
 
       const latestMessage = await supportAgent.listMessages(ctx, {
         threadId: args.threadId,

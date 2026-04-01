@@ -8,9 +8,9 @@ const AI_MODELS = {
   Image: groq.languageModel("llama-3.3-70b-versatile"),
   pdf: groq.languageModel("llama-3.3-70b-versatile"),
   html: groq.languageModel("llama-3.3-70b-versatile"),
-} as const;
+} as const satisfies Record<string, any>;
 
-const SUPPORTED_IMAGE_TYPES = [
+const SUPPORTED_IMAGE_TYPES = [  
   "image/jpeg",
   "image/png",
   "image/gif",
@@ -25,7 +25,7 @@ const SYSTEM_PROMPT = {
 };
 
 export type ExtractTextContentArgs = {
-  storrageId: Id<"_storage">;
+  storageId: Id<"_storage">;
   filename: string;
   bytes?: ArrayBuffer;
   mimeType: string;
@@ -35,8 +35,8 @@ export async function extractTextContent(
   ctx: { storage: StorageActionWriter },
   args: ExtractTextContentArgs,
 ): Promise<string> {
-  const { storrageId, filename, bytes, mimeType } = args;
-  const url = await ctx.storage.getUrl(storrageId);
+  const { storageId, filename, bytes, mimeType } = args;
+  const url = await ctx.storage.getUrl(storageId);
   assert(url, "Failed to get URL from storage");
 
   if (SUPPORTED_IMAGE_TYPES.some((type) => type === mimeType)) {
@@ -47,7 +47,7 @@ export async function extractTextContent(
   }
 
   if (mimeType.toLowerCase().includes("text")) {
-    return extractTextFileContent(ctx, storrageId, bytes, mimeType);
+    return extractTextFileContent(ctx, storageId, bytes, mimeType);
   }
   throw new Error(`Unsupported MIME type: ${mimeType}`);
 }
@@ -69,7 +69,7 @@ async function extractTextFileContent(
 
   if (mimeType.toLowerCase() !== "text/plain") {
     const result = await generateText({
-      model: AI_MODELS.html,
+      model: AI_MODELS.html as any,
       system: SYSTEM_PROMPT.html,
       messages: [
         {
@@ -97,7 +97,7 @@ async function extractPdfText(
   filename: string,
 ): Promise<string> {
   const response = await generateText({
-    model: AI_MODELS.pdf,
+    model: AI_MODELS.pdf as any,
     system: SYSTEM_PROMPT.pdf,
     messages: [
       {
@@ -106,7 +106,7 @@ async function extractPdfText(
           { type: "file", data: new URL(url), mimeType, filename },
           {
             type: "text",
-            text: "Extract the text content from the PDF file without explaning you'll dooing so",
+            text: "Extract the text content from the PDF file without explaining you'll do so",
           },
         ],
       },
@@ -117,7 +117,7 @@ async function extractPdfText(
 
 async function extractImageText(url: string): Promise<string> {
   const response = await generateText({
-    model: AI_MODELS.Image,
+    model: AI_MODELS.Image as any,
     system: SYSTEM_PROMPT.image,
     messages: [{ role: "user", content: [{ type: "image", image: url }] }],
   });

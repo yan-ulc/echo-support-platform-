@@ -47,11 +47,11 @@ export const addFile = action({
 
     const mimeType = args.mimeType || guessMimeType(filename, bytes);
     const blob = new Blob([bytes], { type: mimeType });
-
-    const storrageId = await ctx.storage.store(blob);
+    
+    const storageId = await ctx.storage.store(blob);
 
     const text = await extractTextContent(ctx, {
-      storrageId,
+      storageId,
       filename,
       bytes,
       mimeType,
@@ -63,7 +63,7 @@ export const addFile = action({
       key: filename,
       title: filename,
       metadata: {
-        storrageId,
+        storageId,
         uploadedBy: orgId,
         filename,
         category: category ?? null,
@@ -72,11 +72,11 @@ export const addFile = action({
     });
     if (!created) {
       console.debug (`File with the same content already exists`);
-      await ctx.storage.delete(storrageId);
+      await ctx.storage.delete(storageId);
     }
 
     return {
-      url: await ctx.storage.getUrl(storrageId),
+      url: await ctx.storage.getUrl(storageId),
       entryId,
     }
   },
