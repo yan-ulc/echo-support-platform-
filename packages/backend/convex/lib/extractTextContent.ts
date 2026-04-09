@@ -2,6 +2,7 @@ import { groq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { assert } from "convex-helpers";
 import { StorageActionWriter } from "convex/server";
+import { api } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 
 const AI_MODELS = {
@@ -10,7 +11,7 @@ const AI_MODELS = {
   html: groq.languageModel("llama-3.3-70b-versatile"),
 } as const satisfies Record<string, any>;
 
-const SUPPORTED_IMAGE_TYPES = [  
+const SUPPORTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
   "image/gif",
@@ -32,7 +33,7 @@ export type ExtractTextContentArgs = {
 };
 
 export async function extractTextContent(
-  ctx: { storage: StorageActionWriter },
+  ctx: { storage: StorageActionWriter; runAction: any },
   args: ExtractTextContentArgs,
 ): Promise<string> {
   const { storageId, filename, bytes, mimeType } = args;
@@ -43,7 +44,7 @@ export async function extractTextContent(
     return extractImageText(url);
   }
   if (mimeType.toLowerCase().includes("pdf")) {
-    return extractPdfText(url, mimeType, filename);
+    return extractPdfText(ctx, url, mimeType, filename);
   }
 
   if (mimeType.toLowerCase().includes("text")) {
@@ -92,27 +93,32 @@ async function extractTextFileContent(
 }
 
 async function extractPdfText(
+  ctx: any,
   url: string,
   mimeType: string,
   filename: string,
 ): Promise<string> {
-  const response = await generateText({
+  // Call the dedicated PDF worker action which runs with "use node"
+  const extractedText = await ctx.runAction(
+    api.actions.pdfWorker.extractPdfTextAction,
+    {
+      url,
+    },
+  );
+
+  // Send ONLY text content to Groq (not file object)
+  const response_text = await generateText({
     model: AI_MODELS.pdf as any,
     system: SYSTEM_PROMPT.pdf,
     messages: [
       {
         role: "user",
-        content: [
-          { type: "file", data: new URL(url), mimeType, filename },
-          {
-            type: "text",
-            text: "Extract the text content from the PDF file without explaining you'll do so",
-          },
-        ],
+        content: `Extract and clean the text content from the following PDF text. Remove any formatting artifacts but preserve the structure:\n\n${extractedText}`,
       },
     ],
   });
-  return response.text;
+
+  return response_text.text;
 }
 
 async function extractImageText(url: string): Promise<string> {

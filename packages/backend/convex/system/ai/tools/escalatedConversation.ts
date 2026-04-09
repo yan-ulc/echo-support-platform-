@@ -2,8 +2,8 @@ import { createTool, type ToolCtx } from "@convex-dev/agent";
 import type { Tool, ToolExecutionOptions } from "ai";
 import z from "zod";
 import { internal } from "../../../_generated/api";
-import { supportAgent } from "../agents/supportAgent";
-
+import { saveMessage } from "@convex-dev/agent";
+import { components } from "../../../_generated/api";
 const createStringTool = createTool as unknown as (config: {
   description: string;
   args: z.ZodTypeAny;
@@ -30,7 +30,7 @@ export const escalateConversation = createStringTool({
       threadId: ctx.threadId,
     });
 
-    await supportAgent.saveMessage(ctx, {
+    await saveMessage(ctx, components.agent, {
       threadId: ctx.threadId,
       message: {
         role: "assistant",
