@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as actions_pdfWorker from "../actions/pdfWorker.js";
 import type * as lib_extractTextContent from "../lib/extractTextContent.js";
 import type * as private_conversation from "../private/conversation.js";
 import type * as private_files from "../private/files.js";
@@ -31,6 +32,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "actions/pdfWorker": typeof actions_pdfWorker;
   "lib/extractTextContent": typeof lib_extractTextContent;
   "private/conversation": typeof private_conversation;
   "private/files": typeof private_files;
