@@ -199,3 +199,4 @@ pnpm --filter @workspace/backend setup
 ### Widget voice tidak jalan
 
 Pastikan `NEXT_PUBLIC_VAPI_API_KEY` dan `NEXT_PUBLIC_VAPI_ASSISTANT_ID` terisi di `apps/widget/.env.local`.
+
